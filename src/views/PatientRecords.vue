@@ -23,6 +23,10 @@
       color="#FF42CD"
     ></v-text-field>
   </v-col>
+  <v-btn color="#FF42CD" text to="/admin/add-assessment" class="white--text">
+      <v-icon left>mdi-plus-box</v-icon>
+      Add Assessment Record
+  </v-btn>
 </v-row>
     <div class="cards-container">
       <div v-for="record in filteredRecords" :key="record.id" class="card relative">
@@ -36,6 +40,15 @@
           >
             {{ chip }}  
           </v-chip>
+          <!-- New chip for date created -->
+          <v-chip 
+          style="position: absolute; top: 0; right: 0; margin-top: 20px; margin-right: 10px;"
+            color="blue" 
+            size="small"
+            class="text-xs"
+          >
+            {{ formatDateCreated(record.date_created) }}
+          </v-chip>
         </div>
 
         <div class="card-content">
@@ -43,9 +56,10 @@
           <p>{{ record.email }}</p>
           <p>{{ record.barangay }}</p>
           <p>{{ record.phone_number }}</p>
+          <p>BMI: {{ calculateBMI(record) }}</p>
         </div>
 
-          <v-row justify="center"> 
+        <v-row justify="center"> 
           <div 
             class="health-assessment-icon absolute top-2 right-12 cursor-pointer hover:scale-110 transition-transform"
             @click="showModal(record)"
@@ -54,15 +68,57 @@
             <span class="text-xs text-gray-600 block text-center">Health Assessment</span>
           </div>
           <div 
-          class="health-assessment-icon absolute top-2 right-12 cursor-pointer hover:scale-110 transition-transform"
-          @click="showMealPlan(record)"
-        >
-          <v-icon color="#FF42CD" size="large">mdi-food-variant</v-icon>
-          <span class="text-xs text-gray-600 block text-center">View Meal Plans</span>
-        </div>
+            class="health-assessment-icon absolute top-2 right-12 cursor-pointer hover:scale-110 transition-transform"
+            @click="record.diagnosed_with_disease === 'yes' ? showSendMessageModal(record) : showMealPlan(record)"
+          >
+            <v-icon v-if="record.diagnosed_with_disease === 'yes'" color="#FF42CD" size="large">mdi-message</v-icon>
+            <v-icon v-else color="#FF42CD" size="large">mdi-food-variant</v-icon>
+            <span v-if="record.diagnosed_with_disease === 'yes'" class="text-xs text-gray-600 block text-center">Send Message</span>
+            <span v-else class="text-xs text-gray-600 block text-center">View Meal Plans</span>
+          </div>
         </v-row>
         </div>
       </div>
+      
+<!-- Send message modal -->
+<v-dialog v-model="showSendMessageModalComponent" max-width="800" class="send-message-modal">
+  <v-card class="shadow-2xl">
+    <v-card-title class="text-white py-4 px-6 flex justify-between items-center" style="background-color:#FF42CD; position: fixed; top: 0; left: 0; right: 0;z-index: 1 ;">
+      <span class="text-2xl font-bold">Send Message to {{ selectedPatientForMessage.first_name }} {{ selectedPatientForMessage.last_name }} </span>
+    </v-card-title>
+    <v-card-text class="p-6 mt-16 overflow-y-auto" >
+      <v-textarea
+        v-model="message"
+        label="Message"
+        placeholder="Type your message here..."
+        auto-grow="true"
+        focused="true"
+        style="color: #FF42CD;"
+      ></v-textarea>
+    </v-card-text>
+    <v-card-actions style="position: fixed; bottom: 0; left: 0; right: 0; background-color: white;" class="bg-gray-100 py-4 px-6 rounded-b-xl">
+      <v-spacer></v-spacer>
+      <v-btn 
+        color="#FF42CD" 
+        variant="elevated" 
+        class="px-6 py-2 rounded-lg shadow-md hover:shadow-lg transition-all"
+        @click="closeSendMessageModal"
+      >
+        Cancel
+      </v-btn>
+      <v-btn 
+        color="#FF42CD" 
+        variant="elevated" 
+        class="px-6 py-2 rounded-lg shadow-md hover:shadow-lg transition-all"
+        @click="sendMessage"
+      >
+        Send
+      </v-btn>
+    </v-card-actions>
+  </v-card>
+</v-dialog>
+
+
       <v-dialog v-model="showModalComponent" max-width="1100" class="health-assessment-modal">
   <v-card class="shadow-2xl">
     <v-card-title class="text-white py-4 px-6  flex justify-between items-center" style="background-color:#FF42CD; position: fixed; top: 0; left: 0; right: 0;z-index: 1 ;">
@@ -289,31 +345,70 @@
     </v-card-text>
 
     <v-card-actions style="position: fixed; bottom: 0; left: 0; right: 0; background-color: white;" class="bg-gray-100 py-4 px-6 rounded-b-xl">
-    <v-spacer></v-spacer>
-    <v-btn 
-      color="#FF42CD" 
-      variant="elevated" 
-      class="px-6 py-2 rounded-lg shadow-md hover:shadow-lg transition-all"
-      @click="closeModal"
-    >
-      Close
-    </v-btn>
-    <v-btn 
-      color="#FF42CD" 
-      variant="elevated" 
-      class="px-6 py-2 rounded-lg shadow-md hover:shadow-lg transition-all"
-      @click="updateRecord"
-    >
-      Save Changes
-    </v-btn>
-  </v-card-actions>
+  <v-btn 
+    color="red" 
+    variant="elevated" 
+    class="px-6 py-2 rounded-lg shadow-md hover:shadow-lg transition-all mr-auto"
+    @click="confirmDeleteRecord"
+  >
+    <v-icon left>mdi-delete</v-icon>
+    Delete Record
+  </v-btn>
+  <v-spacer></v-spacer>
+  <v-btn 
+    color="#FF42CD" 
+    variant="elevated" 
+    class="px-6 py-2 rounded-lg shadow-md hover:shadow-lg transition-all"
+    @click="closeModal"
+  >
+    Close
+  </v-btn>
+  <v-btn 
+    color="#FF42CD" 
+    variant="elevated" 
+    class="px-6 py-2 rounded-lg shadow-md hover:shadow-lg transition-all"
+    @click="updateRecord"
+  >
+    Save Changes
+  </v-btn>
+</v-card-actions>
+  </v-card>
+</v-dialog>
+<!-- Confirmation Dialog for Record Deletion -->
+<v-dialog v-model="showDeleteConfirmationModal" max-width="500">
+  <v-card>
+    <v-card-title class="text-h5 text-red">
+      Confirm Deletion
+    </v-card-title>
+    <v-card-text>
+      Are you sure you want to delete this health assessment record for 
+      <strong>{{ selectedRecord.first_name }} {{ selectedRecord.last_name }}</strong>? 
+      This action cannot be undone.
+    </v-card-text>
+    <v-card-actions>
+      <v-spacer></v-spacer>
+      <v-btn 
+        color="gray" 
+        variant="text"
+        @click="showDeleteConfirmationModal = false"
+      >
+        Cancel
+      </v-btn>
+      <v-btn 
+        color="red" 
+        variant="elevated"
+        @click="deleteRecord"
+      >
+        Delete
+      </v-btn>
+    </v-card-actions>
   </v-card>
 </v-dialog>
 <!-- meal plan modal-->
 <v-dialog v-model="showMealPlanModal" max-width="1100" height="700" class="meal-plan-modal">
   <v-card class="shadow-2xl">
     <v-card-title class="text-white py-4 px-6 flex justify-between items-center" style="background-color:#FF42CD; position: fixed; top: 0; left: 0; right: 0;z-index: 1;">
-      <span class="text-2xl font-bold">{{ mealplan }}</span>
+      <span class="text-2xl font-bold">{{ mealplan }} for {{ selectedRecord.first_name }} {{ selectedRecord.last_name }}</span>
     </v-card-title>
     <v-card-text class="p-6 mt-16 overflow-y-auto" style="max-height: 600px;">
       <v-row>
@@ -415,22 +510,22 @@
   };
   
   const calculateBMI = (record) => {
-    const heightInMeters = record.height / 100;
-    const weight = record.weight;
-  
-    if (heightInMeters > 0 && weight > 0) {
-      const bmi = weight / (heightInMeters * heightInMeters);
-      return bmi;
-    }
-    return null;
-  };
+  const heightInMeters = record.height / 100;
+  const weight = record.weight;
+
+  if (heightInMeters > 0 && weight > 0) {
+    const bmi = weight / (heightInMeters * heightInMeters);
+    return Math.round(bmi * 10) / 10;
+  }
+  return null;
+};
   
   const getPatientChips = (record) => {
     const chips = [];
     const bmi = calculateBMI(record);
   
     if (record.is_pregnant === 'yes') {
-      chips.push('Pregnant');
+      chips.push('Pregnant'); 
     }
   
     if (bmi !== null) {
@@ -461,6 +556,16 @@
     }
     return chips;
   };
+  const formatDateCreated = (dateString) => {
+  if (!dateString) return 'No Date';
+  
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  });
+};
   const barangays = [
   "Alitao",
   "Angustias Zone I",
@@ -644,13 +749,50 @@ const showMealPlan = (record) => {
   fetchMealPlans(record);
 };
 
-// Add this to your existing methods
+const showSendMessageModalComponent = ref(false);
+const   selectedPatientForMessage = ref(null)
+const message = ref('');
+const showSendMessageModal = (record) => {
+      selectedPatientForMessage.value = record
+      console.log('Selected patient for message:', selectedPatientForMessage.value.first_name);
+      showSendMessageModalComponent.value = true
+    }
+const closeSendMessageModal = () => {
+      showSendMessageModalComponent.value = false
+      message.value = ''
+}
 const closeMealPlanModal = () => {
   showMealPlanModal.value = false;
   mealPlanData.value = [];
   mealplan.value = '';
 };
 
+const showDeleteConfirmationModal = ref(false);
+
+const confirmDeleteRecord = () => {
+  showDeleteConfirmationModal.value = true;
+};
+
+const deleteRecord = async () => {
+  try {
+    // Close the confirmation modal
+    showDeleteConfirmationModal.value = false;
+    
+    // Close the health assessment modal
+    showModalComponent.value = false;
+    
+    // Send delete request to the server
+    await axios.delete(`http://localhost:8055/items/health_assessnent/${selectedRecord.value.id}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    
+
+    await fetchPatientRecords();
+    console.log('Record deleted successfully');
+  } catch (error) {
+    console.error('Error deleting record:', error);
+  }
+};
   onMounted(() => {
     fetchPatientRecords();
   });
@@ -658,7 +800,7 @@ const closeMealPlanModal = () => {
   
   <style scoped>
   .container {
-    max-width: 1500px;
+    max-width: 1800px;
     margin: 40px auto;
     padding: 20px;
     background-color: #fff;
@@ -688,7 +830,7 @@ const closeMealPlanModal = () => {
   .card {
   margin: 20px;
   padding: 20px;
-  width: 350px; 
+  width: 450px; 
   background-color: #fff;
   border-radius: 10px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);

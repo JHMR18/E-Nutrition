@@ -15,10 +15,15 @@
                 <v-icon left>mdi-account-multiple-outline</v-icon>
                 Patient Records
             </v-btn>
+                        <v-btn text to="/admin/users" class="white--text">
+                <v-icon left>mdi-account</v-icon>
+                Patient Accounts
+            </v-btn>
             <v-btn text to="/admin/reports" class="white--text">
                 <v-icon left>mdi-chart-bar</v-icon>
                 Reports
             </v-btn>
+
             <v-spacer></v-spacer>
 
             <!-- Right Side: User Info -->

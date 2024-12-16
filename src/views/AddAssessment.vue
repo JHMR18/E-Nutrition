@@ -249,8 +249,9 @@
     
     <script setup>
 import { ref, onMounted, watch } from 'vue';
+import { useRouter } from 'vue-router';
 import axios from 'axios';
-
+const router = useRouter();
 const showAddAssessmentModal = ref(true);
 const users = ref([]);
 const selectedUser = ref(null);
@@ -466,7 +467,7 @@ const watchUserSelection = () => {
         }
     });
 };
-    const addAssessmentRecord = async () => {
+const addAssessmentRecord = async () => {
         const token = localStorage.getItem('auth-token');
         try {
         const response = await axios.post('http://localhost:8055/items/health_assessnent', newRecord.value, {
@@ -474,6 +475,7 @@ const watchUserSelection = () => {
         });
         console.log('Record added successfully:', response.data);
         closeAddAssessmentModal();
+        router.push('/admin/patient-records');
 
         } catch (error) {
         console.error('Error adding record:', error);

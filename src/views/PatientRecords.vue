@@ -408,7 +408,7 @@
 <v-dialog v-model="showMealPlanModal" max-width="1100" height="700" class="meal-plan-modal">
   <v-card class="shadow-2xl">
     <v-card-title class="text-white py-4 px-6 flex justify-between items-center" style="background-color:#FF42CD; position: fixed; top: 0; left: 0; right: 0;z-index: 1;">
-      <span class="text-2xl font-bold">{{ mealplan }} for {{ selectedRecord.first_name }} {{ selectedRecord.last_name }}</span>
+      <span class="text-2xl font-bold">{{ mealplan }} for {{ selectedRecordForMessage.first_name }} {{ selectedRecordForMessage.last_name }}</span>
     </v-card-title>
     <v-card-text class="p-6 mt-16 overflow-y-auto" style="max-height: 600px;">
       <v-row>
@@ -744,14 +744,19 @@ const fetchMealPlans = async (record) => {
     showMealPlanModal.value = true;
   }
 };
-// Modify the existing showModal function to include meal plan button
-const showMealPlan = (record) => {
-  fetchMealPlans(record);
-};
 
 const showSendMessageModalComponent = ref(false);
 const   selectedPatientForMessage = ref(null)
+const selectedRecordForMessage = ref(null);
 const message = ref('');
+// Modify the existing showModal function to include meal plan button
+const showMealPlan = (record) => {
+  fetchMealPlans(record);
+  selectedRecordForMessage.value = record
+  showMealPlanModal.value = true
+};
+
+
 const showSendMessageModal = (record) => {
       selectedPatientForMessage.value = record
       console.log('Selected patient for message:', selectedPatientForMessage.value.first_name);
@@ -762,9 +767,11 @@ const closeSendMessageModal = () => {
       message.value = ''
 }
 const closeMealPlanModal = () => {
+  
   showMealPlanModal.value = false;
   mealPlanData.value = [];
   mealplan.value = '';
+
 };
 
 const showDeleteConfirmationModal = ref(false);

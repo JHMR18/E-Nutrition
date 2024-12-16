@@ -16,8 +16,6 @@ const computedproperty = computed(() => {
   </div>
   <div v-else class="message">
     <h1>DEV HAS DISABLED THE APP FOR DEVELOPMENT</h1> 
-    <br>
-    <h2>Pay the dev to continue using the app</h2>
   </div>
 </template>
 

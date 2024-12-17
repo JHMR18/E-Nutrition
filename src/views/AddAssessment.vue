@@ -177,7 +177,16 @@
             <v-radio label="Yes" value="yes"></v-radio>
             <v-radio label="No" value="no"></v-radio>
           </v-radio-group>
-          <v-text-field label="Medical Condition" v-model="newRecord.medical_condition" style="color: #FF42CD;"></v-text-field>
+          
+          <v-select
+            label="Medical Condition"
+            v-model="newRecord.medical_condition"
+            :items="medicalConditions"
+            style="color: #FF42CD;"
+            item-title="name"
+            item-value="value"
+          ></v-select>
+          
           <!-- <v-text-field label="Lab Test Result" v-model="newRecord.lab_test_result" style="color: #FF42CD;"></v-text-field> -->
         </div>
       </section>
@@ -320,7 +329,21 @@ const selectedUser = ref(null);
         }
     ]
 });
-
+    const medicalConditions = [
+    { name: 'Arthritis', value: 'arthritis' },
+        { name: 'Diabetes', value: 'diabetes' },
+        { name: 'Hypertension', value: 'hypertension' },
+        { name: 'Heart Disease', value: 'heart_disease' },
+        { name: 'Cancer', value: 'cancer' },
+        { name: 'High Cholesterol', value: 'high_cholesterol' },
+        { name: 'High Triglycerides', value: 'high_triglycerides' },
+        { name: 'Kidney disease', value: 'kidney_disease' },
+        { name: 'Asthma', value: 'asthma' },
+        { name: 'Fatty liver', value: 'fatty_liver' },
+        { name: 'Chronic Obstructive Pulmonary Disease', value: 'copd' },
+        { name: 'Tuberculosis', value: 'tuberculosis' },
+        { name: 'Obesity', value: 'obesity' }
+    ]
     const barangays = [
         "Alitao",
         "Angustias Zone I",
@@ -467,6 +490,23 @@ const watchUserSelection = () => {
         }
     });
 };
+watch(() => newRecord.value.birth_date, (newBirthDate) => {
+    if (newBirthDate) {
+        const birthDate = new Date(newBirthDate);
+        const today = new Date();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const monthDifference = today.getMonth() - birthDate.getMonth();
+        
+        // Adjust age if the birthday hasn't occurred yet this year
+        if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+        
+        newRecord.value.age = age; // Update the age field
+    } else {
+        newRecord.value.age = ''; // Reset age if no birth date is selected
+    }
+});
 const addAssessmentRecord = async () => {
         const token = localStorage.getItem('auth-token');
         try {

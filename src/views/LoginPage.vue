@@ -92,8 +92,9 @@ const login = async () => {
             email: email.value,
             password: password.value,
         });
-        token.value = "ccU0aOKcdEV48Sk8JKwHxw2z9F8HUXvS";
-        // token.value = response.data.data.access_token;
+        //token.value = "ccU0aOKcdEV48Sk8JKwHxw2z9F8HUXvS";
+        token.value = "VgVfwfMsYckOo7NME5VxpKFPcxf4mfm6";
+        token.value = response.data.data.access_token;
         localStorage.setItem('auth-token', token.value);
         loginError.value = false;
         router.push('/admin/dashboard');
